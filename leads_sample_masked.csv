@@ -1,0 +1,21 @@
+﻿rank,pi_name,institution,inst_type,email,n_papers,n_protocols,protocols,product,manual_load,throughput,pain_point
+1,J***** K*,서울대학교,대학,k******@snu.ac.kr,9,2,NGS_library_prep|drug_screening,SUITABLE,5,high,오가노이드 기반 대규모 약물 스크리닝
+2,G*** Y*** J***,POSTECH,대학,g*****@postech.ac.kr,5,2,NGS_library_prep|drug_screening,SUITABLE,5,high,라이브러리 구축 및 고속 스크리닝
+3,G*** M** L**,KAIST,대학,g*********@kaist.ac.kr,4,2,NGS_library_prep|cell_line_development,SUITABLE,5,high,CRISPR 라이브러리 구축 및 대량 세포 배양
+4,D******* W**,"NEXEL Co., Ltd",기업,d****@nexel.co.kr,2,3,NGS_library_prep|drug_screening|qPCR,Lab Automation,5,high,약물 스크리닝 및 세포 배양액 반복 처리
+5,D******* L**,삼성서울병원,대학병원,d****@skku.edu,2,2,NGS_library_prep|drug_screening,SUITABLE,5,high,"5,000종 이상 화합물 스크리닝 분주"
+6,H******* C**,전북대학교,대학,h****@jbnu.ac.kr,2,3,ELISA|NGS_library_prep|serial_dilution,SUITABLE,5,high,대규모 샘플의 ELISA 및 PCR 반복 분주
+7,J** H*** N*,과학기술연합대학원(UST),대학,j*********@ip-korea.org,2,1,drug_screening,NOTABLE96,5,high,약물 라이브러리 스크리닝 및 분주
+8,R******* K****,서울대학교,대학,r*****@snu.ac.kr,2,1,drug_screening,NOTABLE96,5,high,대규모 화합물 라이브러리 스크리닝
+9,D****** M**,서울대학교,대학,d********@snu.ac.kr,1,1,drug_screening,NOTABLE96,5,high,고속 약물 스크리닝을 위한 반복 분주
+10,E******* W**,한국생명공학연구원(KRIBB),정부출연연,e****@kribb.re.kr,1,1,drug_screening,NOTABLE96,5,high,효소 변이체 라이브러리 고속 스크리닝
+11,S* J** J***,씨젠,기업,j********@amc.seoul.kr,1,1,drug_screening,NOTABLE96,5,high,종양 오가노이드 약물 스크리닝 분주
+12,J***** L**,서울대학교,대학,j*******@snu.ac.kr,1,1,drug_screening,NOTABLE96,5,high,대규모 약물 스크리닝 분주 및 측정
+13,K******** K**,부산대병원,대학병원,k******@pusan.ac.kr,1,1,ELISA,NOTABLE96,5,high,대규모 혈청 샘플 ELISA 분석
+14,K***** Y***,KAIST,대학,k********@kaist.ac.kr,1,1,drug_screening,NOTABLE96,5,high,오가노이드 기반 약물 스크리닝 분주
+15,K******* M****,UNIST,대학,k*****@ibs.re.kr,1,1,drug_screening,NOTABLE96,5,high,대규모 화합물 라이브러리 스크리닝
+16,M**** H*** N**,한국생명공학연구원(KRIBB),정부출연연,m****@kribb.re.kr,1,1,drug_screening,NOTABLE96,5,high,고처리량 스크리닝을 위한 반복 분주 및 희석
+17,Y******** C****,질병관리청,정부출연연,r**********@korea.kr,1,1,NGS_library_prep,SUITABLE,5,high,대규모 NGS 라이브러리 제작 및 분주
+18,S******* K***,한국과학기술연구원(KIST),정부출연연,s*****@kist.re.kr,1,1,drug_screening,NOTABLE96,5,high,대규모 약물 스크리닝 및 세포 분주
+19,W****** H**,서울대병원,대학병원,h***@snu.ac.kr,3,3,NGS_library_prep|cell_line_development|drug_screening,Lab Automation,5,high,다수 약물 처리에 따른 반복 분주 및 세포 생존율 측정
+20,S******** L**,농림축산검역본부,정부출연연,i*******@korea.kr,3,1,serial_dilution,NOTABLE,5,high,수천 샘플의 항생제 감수성 희석 실험
