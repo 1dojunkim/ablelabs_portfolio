@@ -42,11 +42,16 @@ def main():
 
     # 연구실 식별키.
     # 이메일이 있으면 그것이 가장 확실한 식별자다.
-    # 없으면 (교신저자명 + 기관) 조합으로 대신하며, 동명이인 위험은 남는다.
+    # 없으면 (교신저자명 + 소속 원문) 조합을 쓴다.
+    #   주의: 여기서 기관 '표준명(institution)'이 아니라 소속 '원문(last_author_aff)'을
+    #   쓴다. 표준명은 02의 식별 규칙이 바뀌면 표기가 달라져(예: 한글↔영문) 키가 흔들리고,
+    #   그러면 판정 결과와의 연결이 끊긴다. 소속 원문은 논문에 실린 그대로라 불변이므로
+    #   02를 어떻게 바꾸든 같은 연구실은 같은 키로 묶인다.
+    aff_key = df["last_author_aff"].fillna("").str.split("|||").str[0].str.strip()
     df["lab_key"] = np.where(
         df["email"] != "",
         df["email"],
-        df["last_author"] + " @ " + df["institution"],
+        df["last_author"] + " @ " + aff_key,
     )
 
     df["protocol_list"] = df["protocol"].fillna("").str.split("|")

@@ -42,7 +42,7 @@
 import os
 import pandas as pd
 
-IN = "data/labs_judged.csv"
+JUDGED = "data/labs_judged.csv"
 OUT_ALL = "data/leads.csv"
 OUT_TOP = "data/leads_top.csv"
 
@@ -88,10 +88,10 @@ CAPACITY = 100
 
 
 def main():
-    if not os.path.exists(IN):
-        raise SystemExit(f"{IN} 이 없습니다. 04_classify.py 를 먼저 실행하세요.")
+    if not os.path.exists(JUDGED):
+        raise SystemExit(f"{JUDGED} 이 없습니다. 04_classify.py 를 먼저 실행하세요.")
 
-    labs = pd.read_csv(IN)
+    labs = pd.read_csv(JUDGED)
     total = len(labs)
     judged = labs["manual_load"].notna().sum()
     print(f"연구실 총계: {total}개")
