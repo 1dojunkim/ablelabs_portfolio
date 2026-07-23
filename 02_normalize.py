@@ -78,6 +78,36 @@ PAT_INST = re.compile(
 
 EMAIL_PAT = re.compile(r"[\w.+\-]+@[\w\-]+\.[\w.\-]+")
 
+# 부서·학과를 나타내는 머리말. 기관명 앞에 붙어 있으면 떼어낸다.
+# (예: "Department of Dermatology Samsung Medical Center" → "Samsung Medical Center")
+DEPT_HEAD = re.compile(
+    r"^(?:Department|Division|College|School|Laboratory|Lab|Program|Faculty|Graduate|Center for)\b",
+    re.I,
+)
+DEPT_STRIP = re.compile(
+    r"^(?:Department|Division|College|School|Laboratory|Lab|Program|Faculty|Graduate|Center for)"
+    r"\s+(?:of\s+)?[A-Za-z]+\s*",
+    re.I,
+)
+
+
+def _find(pattern, aff):
+    """소속 문자열을 쉼표로 나눠, 기관 핵심어가 있는 조각에서 기관명을 뽑는다.
+
+    소속란은 '부서, 기관, 도시, 국가' 순으로 쉼표로 구분된다. 조각 단위로 봐야
+    부서명이 기관명에 섞이지 않는다.
+    """
+    for seg in re.split(r"[,;]", aff):
+        seg = seg.strip()
+        if not seg:
+            continue
+        if DEPT_HEAD.search(seg):
+            seg = DEPT_STRIP.sub("", seg)
+        m = pattern.search(seg)
+        if m:
+            return m.group(1).strip()
+    return None
+
 
 def extract_email(aff):
     m = EMAIL_PAT.search(aff or "")
@@ -106,29 +136,29 @@ def resolve_institution(aff):
             return name, "대학", "규칙"
 
     # 2. 병원
-    m = PAT_HOSPITAL.search(first)
+    m = _find(PAT_HOSPITAL, first)
     if m:
-        return m.group(1).strip(), "대학병원", "규칙"
+        return m, "대학병원", "규칙"
 
     # 3. 기업
-    m = PAT_COMPANY.search(first)
+    m = _find(PAT_COMPANY, first)
     if m:
-        return m.group(1).strip(), "기업", "규칙"
+        return m, "기업", "규칙"
 
     # 4. 정부출연연 (단, 'University ... Institute' 형태는 대학이므로 제외)
-    m = PAT_GOV.search(first)
-    if m and "University" not in m.group(1):
-        return m.group(1).strip(), "정부출연연", "규칙"
+    m = _find(PAT_GOV, first)
+    if m and "University" not in m:
+        return m, "정부출연연", "규칙"
 
     # 5. 대학 (University가 있으면 부설 institute/center 무시하고 대학으로)
-    m = PAT_UNIV.search(first)
+    m = _find(PAT_UNIV, first)
     if m:
-        return m.group(1).strip(), "대학", "규칙"
+        return m, "대학", "규칙"
 
     # 6. 그 밖의 독립 연구소
-    m = PAT_INST.search(first)
+    m = _find(PAT_INST, first)
     if m:
-        return m.group(1).strip(), "정부출연연", "규칙"
+        return m, "정부출연연", "규칙"
 
     return "", "미분류", "실패"
 
