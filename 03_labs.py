@@ -1,18 +1,21 @@
 """
 논문 기반 액체 핸들링 자동화 타겟 리드 발굴 파이프라인
-3단계: 연구실 단위 집계
+3단계: 연구실 단위 집계 (개선판)
 
-리드의 단위는 논문이 아니라 연구실이다.
-장비를 검토하고 예산을 집행하는 주체는 연구책임자(교신저자)이므로,
-논문을 연구실 단위로 접어야 영업 대상 목록이 된다.
-
-이 단계는 집계만 한다. 점수도 제품 결정도 하지 않는다.
-- 점수: 여러 지표를 하나로 합치려면 임의 가중치가 필요하고, 그 근거가 없다.
-- 제품 결정: 처리량(4단계 AI 판정 결과)을 반영해야 정확하므로 5단계로 미룬다.
-우선순위와 제품은 5단계에서 정한다.
+원본 03_labs.py 대비 변경점:
+- 문제: 같은 사람의 논문이라도 일부에만 이메일이 있으면, 이메일 유무로
+  lab_key가 갈려 한 연구실이 두 개 이상의 lab_id로 쪼개졌다(fragmentation).
+  예: Ae-Son Om (Hanyang University) — 이메일 있는 논문 1편은
+  "aesonom@hanyang.ac.kr"로, 이메일 없는 논문 3편은
+  "Ae-Son Om @ Hanyang University"로 갈라져 서로 다른 연구실로 집계됨.
+- 해결: 행 단위로 "이메일 있으면 이메일, 없으면 이름+소속"을 쓰는 대신,
+  먼저 (정규화된 교신저자명, 정규화된 소속)별로 그 사람이 다른 논문에서
+  남긴 이메일이 있는지 조회하는 조회표(email_lookup)를 만들고,
+  이메일 없는 논문도 그 조회표에 이메일이 있으면 그 이메일 키로 승격시킨다.
+  즉 "행 단위 규칙"을 "사람 단위 규칙"으로 바꾼다.
 
 사용법:
-    python 03_labs.py
+    python 03_labs_patched.py
 입력:
     data/papers_normalized.csv
 출력:
@@ -20,11 +23,26 @@
 """
 
 import os
+import re
 import numpy as np
 import pandas as pd
 
 IN = "data/papers_normalized.csv"
 OUT = "data/labs.csv"
+
+_INST_NOISE = re.compile(
+    r"(hospital|medical center|college of medicine|graduate school of|"
+    r"research institute of|department of|inc\.?|co\.? ltd\.?)"
+)
+
+
+def norm_name(name: str) -> str:
+    return re.sub(r"[-\s]+", "", str(name).lower())
+
+
+def norm_inst(inst: str) -> str:
+    t = _INST_NOISE.sub("", str(inst).lower())
+    return re.sub(r"[^a-z0-9가-힣]", "", t)
 
 
 def main():
@@ -37,22 +55,37 @@ def main():
     df["last_author"] = df["last_author"].fillna("")
     df["year"] = pd.to_numeric(df["year"], errors="coerce")
 
-    # 기관을 식별하지 못한 건은 제외한다. 어디의 누구인지 모르면 영업할 수 없다.
     df = df[(df["institution"] != "") & (df["last_author"] != "")].copy()
 
-    # 연구실 식별키.
-    # 이메일이 있으면 그것이 가장 확실한 식별자다.
-    # 없으면 (교신저자명 + 소속 원문) 조합을 쓴다.
-    #   주의: 여기서 기관 '표준명(institution)'이 아니라 소속 '원문(last_author_aff)'을
-    #   쓴다. 표준명은 02의 식별 규칙이 바뀌면 표기가 달라져(예: 한글↔영문) 키가 흔들리고,
-    #   그러면 판정 결과와의 연결이 끊긴다. 소속 원문은 논문에 실린 그대로라 불변이므로
-    #   02를 어떻게 바꾸든 같은 연구실은 같은 키로 묶인다.
     aff_key = df["last_author_aff"].fillna("").str.split("|||").str[0].str.strip()
-    df["lab_key"] = np.where(
-        df["email"] != "",
-        df["email"],
-        df["last_author"] + " @ " + aff_key,
-    )
+
+    # --- 개선: 사람 단위로 이메일을 먼저 조회 ---
+    # 정규화된 (이름, 기관 표준명) -> 그 사람이 어느 논문에서든 남긴 이메일
+    ident = list(zip(
+        df["last_author"].map(norm_name),
+        df["institution"].map(norm_inst),
+    ))
+    df["_ident"] = ident
+
+    email_lookup = {}
+    for i, row_email in zip(ident, df["email"]):
+        if row_email and i not in email_lookup:
+            email_lookup[i] = row_email
+
+    def resolve_key(i, row_email, author, aff):
+        if row_email:
+            return row_email
+        looked_up = email_lookup.get(i)
+        if looked_up:
+            return looked_up
+        return f"{author} @ {aff}"
+
+    df["lab_key"] = [
+        resolve_key(i, e, a, af)
+        for i, e, a, af in zip(df["_ident"], df["email"], df["last_author"], aff_key)
+    ]
+    df.drop(columns=["_ident"], inplace=True)
+    # --- 개선 끝 ---
 
     df["protocol_list"] = df["protocol"].fillna("").str.split("|")
 
@@ -82,7 +115,6 @@ def main():
         })
 
     labs = pd.DataFrame(rows)
-    # 정렬 없이 안정적인 id 만 부여한다. 순위·제품은 5단계에서 만든다.
     labs = labs.sort_values("lab_key").reset_index(drop=True)
     labs.insert(0, "lab_id", labs.index + 1)
     labs.to_csv(OUT, index=False, encoding="utf-8-sig")
